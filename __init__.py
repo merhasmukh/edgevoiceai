@@ -38,6 +38,7 @@ from edgevoiceai.tools.notification_tool import (
     TwoTurnConfirmationNotificationTool,
     default_normalize_phone,
 )
+from edgevoiceai.docs import get_site_directory, mount_docs, serve_docs
 from edgevoiceai.tools.rag_tool import KnowledgeBaseTool
 from edgevoiceai.tools.registry import ToolRegistry
 from edgevoiceai.tools.sensor_tool import SensorTelemetryTool
@@ -49,6 +50,10 @@ __all__ = [
     # Core Agent & Config
     "VoiceAgent",
     "VoiceConfig",
+    # Documentation & Mounting
+    "mount_docs",
+    "serve_docs",
+    "get_site_directory",
     # Tools System
     "BaseTool",
     "ToolRegistry",
