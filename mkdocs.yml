@@ -1,0 +1,95 @@
+site_name: EdgeVoiceAI
+site_description: Production-ready, full-duplex conversational voice framework for edge devices and laptops
+site_author: Google Gemini Voice AI Team
+repo_name: merhasmukh/edgevoiceai
+repo_url: https://github.com/merhasmukh/edgevoiceai
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: false
+            separate_signature: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
+
+nav:
+  - Overview: index.md
+  - Quickstart: quickstart.md
+  - Guides:
+      - Custom Tools & Prompt Templates: guides/custom-tools.md
+      - Hardware Audio & Edge Setup: guides/hardware-audio.md
+      - RAG & Vector Stores: guides/rag-vector-stores.md
+      - Memory & Context Profiles: guides/memory-and-profiles.md
+      - WhatsApp Notifications: guides/whatsapp-integration.md
+  - Concepts:
+      - Full-Duplex Streaming: concepts/duplex-streaming.md
+      - VAD & Barge-In Detection: concepts/vad-and-barge-in.md
+      - Dynamic Prompt Composition: concepts/dynamic-prompts.md
+  - Reference:
+      - VoiceAgent & Config: reference/agent.md
+      - Tools & Registry: reference/tools.md
+      - Audio & Hardware: reference/audio.md
+      - RAG & Embeddings: reference/rag.md
+      - Memory & Session: reference/memory.md
+      - WhatsApp: reference/notifications.md
+

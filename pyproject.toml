@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgevoiceai"
+version = "0.1.0"
+description = "A modular, full-duplex conversational Voice AI framework for edge devices (Raspberry Pi) and laptops (macOS, Linux, Windows)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Hasmukh Mer" }
+]
+keywords = [
+    "voice-ai",
+    "realtime",
+    "full-duplex",
+    "gemini-live",
+    "raspberry-pi",
+    "barge-in",
+    "rag",
+    "edge-computing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+]
+dependencies = [
+    "websockets>=12.0",
+    "pyaudio>=0.2.14",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+qdrant = [
+    "qdrant-client>=1.11.0",
+]
+pinecone = [
+    "pinecone>=5.0.0",
+]
+media = [
+    "pygame>=2.5.0",
+]
+docs = [
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.28.0",
+]
+all = [
+    "qdrant-client>=1.11.0",
+    "pinecone>=5.0.0",
+    "pygame>=2.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.28.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["edgevoiceai*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.html", "*.css", "*.js", "*.png", "*.jpg", "*.svg"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["edgevoiceai/tests"]
