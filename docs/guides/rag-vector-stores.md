@@ -198,3 +198,61 @@ agent = VoiceAgent(config=VoiceConfig(api_key=os.environ["GEMINI_API_KEY"]))
 agent.register_tool(KnowledgeTool())
 ```
 
+---
+
+## 7. High-Throughput Batch Ingestion
+
+For high-volume document ingestion, `GeminiEmbeddings` provides an asynchronous batching method powered by Google Gemini's `batchEmbedContents` API:
+
+```python
+embeddings = GeminiEmbeddings(
+    api_key="your-gemini-key",
+    model="gemini-embedding-001",
+    dimension=768,  # Configurable dense vector dimension
+)
+
+# Batch embed 500 chunks with automatic chunking and 429 rate limit backoff
+chunk_texts = [c.text for c in document_chunks]
+vectors = await embeddings.embed_batch(chunk_texts, batch_size=20)
+
+# Upsert directly into your store
+await store.upsert(document_chunks, vectors)
+```
+
+---
+
+## 8. Pluggable Query Normalization Hook
+
+When working with domain-specific vocabularies, dialects, or multilingual queries (e.g. Hindi/Devanagari, Gujarati, medical codes), pass a `query_normalizer` function into `RAGRetriever`:
+
+```python
+def my_query_normalizer(raw_query: str) -> str:
+    # Enrich or transliterate raw input before embedding & keyword searching
+    return transliterate_or_expand_synonyms(raw_query)
+
+retriever = RAGRetriever(
+    embedding_model=embeddings,
+    vector_store=store,
+    query_normalizer=my_query_normalizer,
+    default_limit=3,
+)
+```
+
+---
+
+## 9. Store Lifecycle & Delta-Sync Operations
+
+All `BaseVectorStore` adapters expose uniform management APIs for live diagnostics and incremental file synchronization:
+
+```python
+# 1. Fetch collection point counts, status, and dimensions
+stats = await store.get_stats()
+# => {"status": "online", "points_count": 750, "vectors_count": 750, "vector_size": 768}
+
+# 2. Delete granular points by ID (when specific chunks are updated)
+deleted_count = await store.delete_points(["chunk_uuid_1", "chunk_uuid_2"])
+
+# 3. Purge all vectors by metadata filter (e.g. when a source file is removed from disk)
+await store.delete_by_filter({"source_file": "obsolete_guide.pdf"})
+```
+

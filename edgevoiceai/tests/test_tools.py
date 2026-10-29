@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, patch
 from edgevoiceai.tools.base import BaseTool, ToolResult, ToolExecutionContext
 from edgevoiceai.tools.registry import ToolRegistry
 from edgevoiceai.tools.audio_tool import AudioPlaybackTool
-from edgevoiceai.tools.notification_tool import default_normalize_phone
-from ai_services.farming_tools import create_farming_tool_registry, farming_tool_registry
+from edgevoiceai.tools.notification_tool import TwoTurnConfirmationNotificationTool, default_normalize_phone
+from edgevoiceai.tools.sensor_tool import SensorTelemetryTool
 
 
 class DummyEchoTool(BaseTool):
@@ -63,52 +63,70 @@ async def test_registry_registration_and_dispatch():
     assert unreg_result.message is not None and "not registered" in unreg_result.message
 
 
-def test_farming_registry_initialization():
-    registry = create_farming_tool_registry()
-    expected_tools = {
-        "search_agricultural_knowledge_base",
-        "play_farmer_experience_audio",
-        "play_amitshah_talk_audio",
-        "send_whatsapp_answer",
-        "read_soil_sensor",
-    }
-    registered = {t.name for t in registry.list_tools()}
-    assert expected_tools.issubset(registered)
+def test_audio_and_notification_tools_initialization():
+    registry = ToolRegistry()
+    audio_tool = AudioPlaybackTool(
+        name="play_audio",
+        description="Plays audio",
+        parameters_schema={"type": "OBJECT", "properties": {}},
+    )
+    notification_tool = TwoTurnConfirmationNotificationTool(
+        name="send_notification",
+        description="Sends notification with 2-turn confirmation",
+        parameters_schema={"type": "OBJECT", "properties": {}},
+        sender_func=AsyncMock(return_value={"status": "sent"}),
+    )
+    sensor_tool = SensorTelemetryTool(
+        name="read_sensor",
+        description="Reads sensor telemetry",
+        parameters_schema={"type": "OBJECT", "properties": {}},
+        reader_func=lambda: {"temperature": 25.0, "status": "ok"},
+    )
+    registry.register(audio_tool)
+    registry.register(notification_tool)
+    registry.register(sensor_tool)
+
+    assert registry.has_tool("play_audio")
+    assert registry.has_tool("send_notification")
+    assert registry.has_tool("read_sensor")
 
     payload = registry.to_gemini_tools_payload()
     names = {fn["name"] for fn in payload[0]["functionDeclarations"]}
-    assert expected_tools == names
+    assert names == {"play_audio", "send_notification", "read_sensor"}
 
 
 @pytest.mark.asyncio
-async def test_farming_tools_execution_via_registry():
-    ctx = ToolExecutionContext(session_id="test_sess_farming")
+async def test_notification_and_sensor_tool_execution():
+    ctx = ToolExecutionContext(session_id="test_sess_framework")
 
-    # 1. Farmer experience audio fallback when not found
-    result = await farming_tool_registry.dispatch(
-        "play_farmer_experience_audio",
-        {
-            "farmer_name": "કામરીયા રમેશભાઈ રતીલાલ",
-            "district": "મોરબી",
-            "audio_url": "/api/experiences/audio/morbi_missing.mp3",
-        },
-        ctx
+    # 1. Notification tool 2-turn confirmation gate
+    sender_mock = AsyncMock(return_value={"status": "ok"})
+    wa_tool = TwoTurnConfirmationNotificationTool(
+        name="send_sms",
+        description="Sends SMS",
+        parameters_schema={"type": "OBJECT", "properties": {}},
+        sender_func=sender_mock,
     )
-    assert result.status == "audio_not_found"
-    assert result.message is not None
-    assert "કામરીયા રમેશભાઈ રતીલાલ" in result.message
-    assert "તમે પોતે જ તમારા અવાજમાં" in result.message
-
-    # 2. WhatsApp tool 2-turn confirmation gate
     # Turn 0: First time seeing phone -> confirmation_required
-    wa_result_1 = await farming_tool_registry.dispatch(
-        "send_whatsapp_answer",
-        {"phone_number": "9825012345", "answer_text": "ટેસ્ટ જવાબ"},
+    wa_result_1 = await wa_tool.execute(
+        {"phone_number": "9825012345", "answer_text": "Test message"},
         ctx
     )
     assert wa_result_1.status == "confirmation_required"
-    assert wa_result_1.message is not None
-    assert "9825012345" in wa_result_1.message
+    assert "9825012345" in (wa_result_1.message or "")
+
+    # 2. Sensor tool telemetry execution
+    sensor_tool = SensorTelemetryTool(
+        name="read_temp",
+        description="Reads temperature",
+        parameters_schema={"type": "OBJECT", "properties": {}},
+        reader_func=lambda: {"temp": 28.5, "status": "connected"},
+    )
+    sensor_res = await sensor_tool.execute({}, ctx)
+    assert sensor_res.status == "connected"
+    assert sensor_res.data["temp"] == 28.5
+    assert sensor_res.client_event is not None
+    assert sensor_res.client_event["data"]["temp"] == 28.5
 
 
 @pytest.mark.asyncio

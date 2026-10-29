@@ -47,3 +47,25 @@ class BaseVectorStore(ABC):
     async def is_available(self) -> bool:
         """Returns True if the backend is reachable and ready to serve queries."""
         pass
+
+    async def get_stats(self) -> dict[str, Any]:
+        """Returns collection/index statistics (point counts, dimensions, status)."""
+        available = await self.is_available()
+        return {
+            "status": "online" if available else "offline",
+            "name": self.name,
+            "points_count": 0,
+            "vectors_count": 0,
+        }
+
+    async def delete_points(self, point_ids: list[str]) -> int:
+        """Deletes specific point IDs from the vector store."""
+        return 0
+
+    async def delete_by_filter(self, filter_metadata: dict[str, Any]) -> bool:
+        """Deletes documents matching the specified metadata filter."""
+        return False
+
+    async def init_collection(self) -> bool:
+        """Ensures the collection or index exists, creating it if required."""
+        return True

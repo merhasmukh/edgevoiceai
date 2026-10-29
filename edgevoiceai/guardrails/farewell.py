@@ -23,19 +23,29 @@ class FarewellDetector:
 
     DEFAULT_FAREWELL_PHRASES = [
         "goodbye",
+        "good bye",
         "bye",
         "farewell",
+        "take care",
         "see you",
         "see ya",
+        "have a great day",
         "alvida",
         "अलविदा",
+        "फिर मिलेंगे",
+        "बाय",
+        "phir milenge",
         "આવજો",
+        "aavjo",
         "રામ રામ આવજો",
+        "ram ram aavjo",
         "ચલો આવજો",
+        "chalo aavjo",
         "ચાલો આવજો",
         "ફરી મળીશું",
         "ફરી વાત કરીશું",
         "સત્ર પૂર્ણ",
+        "વાતચીત પૂર્ણ",
     ]
 
     DEFAULT_GRATITUDE_PHRASES = [

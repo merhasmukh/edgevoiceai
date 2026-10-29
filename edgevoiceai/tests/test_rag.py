@@ -153,3 +153,54 @@ async def test_rag_retriever_callable_in_knowledge_base_tool():
     assert res.status == "success"
     assert "Office Hours" in res.data["results"]
     assert res.jit_instruction is not None
+
+
+@pytest.mark.asyncio
+async def test_vector_store_stats_and_delete_operations():
+    store = InMemoryVectorStore(name="Test Operations Store")
+    chunks = [
+        DocumentChunk(id="c1", title="Doc 1", text="First doc", metadata={"author": "alice"}),
+        DocumentChunk(id="c2", title="Doc 2", text="Second doc", metadata={"author": "bob"}),
+    ]
+    vectors = [[1.0, 0.0], [0.0, 1.0]]
+    await store.upsert(chunks, vectors)
+
+    stats = await store.get_stats()
+    assert stats["status"] == "online"
+    assert stats["points_count"] == 2
+
+    # Delete point by ID
+    deleted = await store.delete_points(["c1"])
+    assert deleted == 1
+    stats_after = await store.get_stats()
+    assert stats_after["points_count"] == 1
+
+    # Delete by filter
+    await store.delete_by_filter({"author": "bob"})
+    stats_final = await store.get_stats()
+    assert stats_final["points_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_rag_retriever_query_normalizer_hook():
+    embedding = MockEmbeddingModel()
+    store = InMemoryVectorStore()
+    chunks = [
+        DocumentChunk(title="Billing FAQ", text="Invoices are issued on the 1st of every month."),
+    ]
+    vectors = [await embedding.embed_text(chunks[0].text)]
+    await store.upsert(chunks, vectors)
+
+    def mock_normalizer(q: str) -> str:
+        return f"billing normalized {q}"
+
+    retriever = RAGRetriever(
+        embedding_model=embedding,
+        vector_store=store,
+        query_normalizer=mock_normalizer,
+        default_score_threshold=0.1,
+    )
+
+    results = await retriever.retrieve("invoice query")
+    assert len(results) == 1
+    assert results[0].title == "Billing FAQ"

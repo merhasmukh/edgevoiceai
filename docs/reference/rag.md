@@ -1,6 +1,16 @@
 # RAG & Embeddings Reference
 
-This section documents the Retrieval-Augmented Generation (RAG) pipeline, text chunking strategies, vector store backends, and embedding generators.
+This section documents the Retrieval-Augmented Generation (RAG) pipeline, document chunk representation, vector store backends, and embedding generators.
+
+---
+
+## DocumentChunk
+
+::: edgevoiceai.rag.chunk
+    options:
+      show_root_heading: true
+      members:
+        - DocumentChunk
 
 ---
 
@@ -11,17 +21,6 @@ This section documents the Retrieval-Augmented Generation (RAG) pipeline, text c
       show_root_heading: true
       members:
         - RAGRetriever
-
----
-
-## TextChunker & Chunk
-
-::: edgevoiceai.rag.chunk
-    options:
-      show_root_heading: true
-      members:
-        - TextChunker
-        - Chunk
 
 ---
 
@@ -63,9 +62,18 @@ This section documents the Retrieval-Augmented Generation (RAG) pipeline, text c
 
 ## Embedding Services
 
+### BaseEmbeddingModel
+
+::: edgevoiceai.rag.embeddings.base
+    options:
+      show_root_heading: true
+      members:
+        - BaseEmbeddingModel
+
+### GeminiEmbeddings
+
 ::: edgevoiceai.rag.embeddings.gemini
     options:
       show_root_heading: true
       members:
-        - GeminiEmbeddingService
-
+        - GeminiEmbeddings

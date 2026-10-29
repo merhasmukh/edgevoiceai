@@ -6,7 +6,7 @@ and automated fallback to local/in-memory knowledge when networks are offline.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 from edgevoiceai.rag.chunk import DocumentChunk
 from edgevoiceai.rag.embeddings.base import BaseEmbeddingModel
 from edgevoiceai.rag.stores.base import BaseVectorStore
@@ -26,12 +26,14 @@ class RAGRetriever:
         fallback_store: BaseVectorStore | None = None,
         default_limit: int = 3,
         default_score_threshold: float = 0.45,
+        query_normalizer: Callable[[str], str] | None = None,
     ) -> None:
         self.embedding_model = embedding_model
         self.vector_store = vector_store
         self.fallback_store = fallback_store
         self.default_limit = default_limit
         self.default_score_threshold = default_score_threshold
+        self.query_normalizer = query_normalizer
 
     async def retrieve(
         self,
@@ -47,6 +49,12 @@ class RAGRetriever:
         clean_query = (query or "").strip()
         if not clean_query:
             return []
+
+        if self.query_normalizer is not None:
+            try:
+                clean_query = self.query_normalizer(clean_query)
+            except Exception as norm_err:
+                print(f"⚠️  [RAGRetriever] Query normalizer error: {norm_err}")
 
         lim = limit if limit is not None else self.default_limit
         thresh = score_threshold if score_threshold is not None else self.default_score_threshold
@@ -90,22 +98,41 @@ class RAGRetriever:
 
         return matches
 
-    def build_context_text(self, matches: list[DocumentChunk]) -> str:
+    def build_context_text(
+        self,
+        matches: list[DocumentChunk],
+        header: str | None = None,
+        footer: str | None = None,
+    ) -> str:
         """Formats retrieved chunks into a standardized context block for LLM prompts."""
         if not matches:
             return ""
-        return "\n\n".join([f"- [{m.title}]: {m.text}" for m in matches if m.text])
+        blocks = [f"- [{m.title}]: {m.text}" for m in matches if m.text]
+        content = "\n\n".join(blocks)
+        parts = []
+        if header:
+            parts.append(header)
+        parts.append(content)
+        if footer:
+            parts.append(footer)
+        return "\n\n".join(parts)
 
     async def __call__(
         self,
         query: str,
         limit: int | None = None,
         score_threshold: float | None = None,
+        filter_metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """
         Callable interface directly compatible with KnowledgeBaseTool's retriever_func.
         Returns list of dicts.
         """
-        chunks = await self.retrieve(query=query, limit=limit, score_threshold=score_threshold)
+        chunks = await self.retrieve(
+            query=query,
+            limit=limit,
+            score_threshold=score_threshold,
+            filter_metadata=filter_metadata,
+        )
         return [c.to_dict() for c in chunks]

@@ -43,6 +43,48 @@ class InMemoryVectorStore(BaseVectorStore):
     async def is_available(self) -> bool:
         return True
 
+    async def get_stats(self) -> dict[str, Any]:
+        """Returns statistics of in-memory store."""
+        return {
+            "status": "online",
+            "name": self.name,
+            "points_count": len(self._chunks),
+            "vectors_count": len(self._vectors),
+        }
+
+    async def delete_points(self, point_ids: list[str]) -> int:
+        """Deletes points by ID."""
+        id_set = set(point_ids)
+        new_chunks = []
+        new_vectors = []
+        deleted = 0
+        for c, v in zip(self._chunks, self._vectors):
+            if c.id in id_set:
+                deleted += 1
+            else:
+                new_chunks.append(c)
+                new_vectors.append(v)
+        self._chunks = new_chunks
+        self._vectors = new_vectors
+        return deleted
+
+    async def delete_by_filter(self, filter_metadata: dict[str, Any]) -> bool:
+        """Deletes chunks matching filter."""
+        new_chunks = []
+        new_vectors = []
+        for c, v in zip(self._chunks, self._vectors):
+            match = True
+            for k, val in filter_metadata.items():
+                if c.metadata.get(k) != val:
+                    match = False
+                    break
+            if not match:
+                new_chunks.append(c)
+                new_vectors.append(v)
+        self._chunks = new_chunks
+        self._vectors = new_vectors
+        return True
+
     async def upsert(
         self,
         chunks: list[DocumentChunk],

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Any
 
 # Resilient pyaudio import with linter type ignore
 try:
@@ -129,6 +130,93 @@ class AudioDeviceManager:
             pass
 
         return None
+
+    @classmethod
+    def find_best_input_device(cls, pa: Any, preferred_index: int | None = None) -> int | None:
+        """
+        Finds the most suitable working audio input device index (USB mic).
+        Falls back to any input-capable device if the default is not marked.
+        """
+        count = pa.get_device_count()
+        if count == 0:
+            return None
+
+        if preferred_index is not None:
+            try:
+                info = pa.get_device_info_by_index(preferred_index)
+                if int(info.get("maxInputChannels", 0)) > 0:
+                    return preferred_index
+            except Exception:
+                pass
+
+        # 1. Try system default
+        try:
+            default_in = pa.get_default_input_device_info()
+            if int(default_in.get("maxInputChannels", 0)) > 0:
+                return int(default_in["index"])
+        except Exception:
+            pass
+
+        # 2. Search for USB / mic device
+        usb_candidate = None
+        first_input = None
+        for i in range(count):
+            try:
+                info = pa.get_device_info_by_index(i)
+                if int(info.get("maxInputChannels", 0)) > 0:
+                    if first_input is None:
+                        first_input = i
+                    name_lower = str(info.get("name", "")).lower()
+                    if "usb" in name_lower or "mic" in name_lower:
+                        usb_candidate = i
+                        break
+            except Exception:
+                continue
+
+        return usb_candidate if usb_candidate is not None else first_input
+
+    @classmethod
+    def find_best_output_device(cls, pa: Any, preferred_index: int | None = None) -> int | None:
+        """
+        Finds the most suitable working audio output device index (Speaker / Bluetooth).
+        """
+        count = pa.get_device_count()
+        if count == 0:
+            return None
+
+        if preferred_index is not None:
+            try:
+                info = pa.get_device_info_by_index(preferred_index)
+                if int(info.get("maxOutputChannels", 0)) > 0:
+                    return preferred_index
+            except Exception:
+                pass
+
+        # 1. Try system default
+        try:
+            default_out = pa.get_default_output_device_info()
+            if int(default_out.get("maxOutputChannels", 0)) > 0:
+                return int(default_out["index"])
+        except Exception:
+            pass
+
+        # 2. Search for preferred output devices (Pulse, bluez, default, headphone, speaker)
+        first_output = None
+        preferred_candidate = None
+        for i in range(count):
+            try:
+                info = pa.get_device_info_by_index(i)
+                if int(info.get("maxOutputChannels", 0)) > 0:
+                    if first_output is None:
+                        first_output = i
+                    name_lower = str(info.get("name", "")).lower()
+                    if any(k in name_lower for k in ("pulse", "default", "bluez", "headphone", "speaker", "usb", "bcm2835", "jack", "audio", "alsa")):
+                        preferred_candidate = i
+                        break
+            except Exception:
+                continue
+
+        return preferred_candidate if preferred_candidate is not None else first_output
 
     @classmethod
     def print_diagnostics(cls) -> None:
