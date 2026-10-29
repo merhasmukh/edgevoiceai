@@ -43,7 +43,7 @@ from edgevoiceai.tools.rag_tool import KnowledgeBaseTool
 from edgevoiceai.tools.registry import ToolRegistry
 from edgevoiceai.tools.sensor_tool import SensorTelemetryTool
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 __all__ = [

@@ -29,3 +29,7 @@ class BaseEmbeddingModel(ABC):
             emb = await self.embed_text(t)
             embeddings.append(emb)
         return embeddings
+
+    async def embed_batch(self, texts: list[str], batch_size: int = 20) -> list[list[float]]:
+        """Alias for batched text embeddings generation."""
+        return await self.embed_texts(texts)

@@ -35,6 +35,9 @@ class PineconeVectorStore(BaseVectorStore):
         self.namespace = namespace
         self._pc: Any = None
         self._index: Any = None
+        self._avail_cache_value: bool | None = None
+        self._avail_cache_ts: float = 0.0
+        self._cache_ttl: float = 300.0
 
     @property
     def name(self) -> str:
@@ -49,10 +52,20 @@ class PineconeVectorStore(BaseVectorStore):
             self._index = self._pc.Index(self.index_name)
         return self._index
 
+    def invalidate_cache(self) -> None:
+        """Clears availability cache."""
+        self._avail_cache_value = None
+        self._avail_cache_ts = 0.0
+
     async def is_available(self) -> bool:
-        """Verifies connection to Pinecone cloud index."""
+        """Verifies connection to Pinecone cloud index with cached result."""
         if not PINECONE_AVAILABLE or Pinecone is None or not self.api_key:
             return False
+
+        import time
+        now = time.monotonic()
+        if self._avail_cache_value is not None and (now - self._avail_cache_ts) < self._cache_ttl:
+            return self._avail_cache_value
 
         def _check() -> bool:
             try:
@@ -64,7 +77,75 @@ class PineconeVectorStore(BaseVectorStore):
             except Exception:
                 return False
 
-        return await asyncio.to_thread(_check)
+        res = await asyncio.to_thread(_check)
+        self._avail_cache_value = res
+        self._avail_cache_ts = now
+        return res
+
+    async def get_stats(self) -> dict[str, Any]:
+        """Retrieves Pinecone index statistics."""
+        if not self.api_key:
+            return {"status": "offline", "index_name": self.index_name, "points_count": 0}
+
+        def _do_stats() -> dict[str, Any]:
+            idx = self._get_index()
+            if idx is None:
+                return {"status": "offline", "index_name": self.index_name, "points_count": 0}
+            try:
+                stats = idx.describe_index_stats()
+                ns = stats.get("namespaces", {}).get(self.namespace, {})
+                return {
+                    "status": "online",
+                    "index_name": self.index_name,
+                    "namespace": self.namespace,
+                    "vector_size": getattr(stats, "dimension", 768),
+                    "points_count": ns.get("vector_count", 0),
+                    "vectors_count": ns.get("vector_count", 0),
+                    "total_vectors": stats.get("total_vector_count", 0),
+                }
+            except Exception as exc:
+                return {"status": "error", "error": str(exc), "points_count": 0}
+
+        return await asyncio.to_thread(_do_stats)
+
+    async def delete_points(self, point_ids: list[str]) -> int:
+        """Deletes specific vector IDs from Pinecone in batches."""
+        if not point_ids or not self.api_key:
+            return 0
+
+        def _do_delete() -> int:
+            idx = self._get_index()
+            if idx is None:
+                return 0
+            batch_size = 100
+            for i in range(0, len(point_ids), batch_size):
+                batch = point_ids[i : i + batch_size]
+                idx.delete(ids=batch, namespace=self.namespace)
+            return len(point_ids)
+
+        try:
+            return await asyncio.to_thread(_do_delete)
+        except Exception as exc:
+            print(f"⚠️  [PineconeVectorStore] Delete points error: {exc}")
+            return 0
+
+    async def delete_by_filter(self, filter_metadata: dict[str, Any]) -> bool:
+        """Deletes all vectors in Pinecone matching metadata filter."""
+        if not filter_metadata or not self.api_key:
+            return False
+
+        def _do_delete_filter() -> bool:
+            idx = self._get_index()
+            if idx is None:
+                return False
+            idx.delete(filter=filter_metadata, namespace=self.namespace)
+            return True
+
+        try:
+            return await asyncio.to_thread(_do_delete_filter)
+        except Exception as exc:
+            print(f"⚠️  [PineconeVectorStore] Delete by filter error: {exc}")
+            return False
 
     async def search(
         self,
@@ -147,6 +228,9 @@ class PineconeVectorStore(BaseVectorStore):
                 }
                 for c, v in zip(chunks, vectors)
             ]
-            idx.upsert(vectors=records, namespace=self.namespace)
+            batch_size = 100
+            for i in range(0, len(records), batch_size):
+                batch = records[i : i + batch_size]
+                idx.upsert(vectors=batch, namespace=self.namespace)
 
         await asyncio.to_thread(_do_upsert)

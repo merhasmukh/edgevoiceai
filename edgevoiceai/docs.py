@@ -68,10 +68,10 @@ def mount_docs(
         # Try auto-building if mkdocs is installed
         try:
             import subprocess
-            repo_root = Path(__file__).resolve().parent.parent
-            if (repo_root / "mkdocs.yml").is_file():
-                print("📦 [EdgeVoiceAI Docs] Building framework documentation...")
-                subprocess.run(["mkdocs", "build"], cwd=str(repo_root), check=True, capture_output=True)
+            build_root = site_path.parent if docs_dir else Path(__file__).resolve().parent.parent
+            if (build_root / "mkdocs.yml").is_file():
+                print(f"📦 [EdgeVoiceAI Docs] Building documentation in {build_root}...")
+                subprocess.run(["mkdocs", "build"], cwd=str(build_root), check=True, capture_output=True)
         except Exception:
             pass
 
