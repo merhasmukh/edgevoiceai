@@ -1,4 +1,5 @@
 site_name: EdgeVoiceAI
+site_url: https://merhasmukh.github.io/edgevoiceai/
 site_description: Production-ready, full-duplex conversational voice framework for edge devices and laptops
 site_author: Google Gemini Voice AI Team
 repo_name: merhasmukh/edgevoiceai
