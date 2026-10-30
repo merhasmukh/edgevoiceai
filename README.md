@@ -126,6 +126,7 @@ export GEMINI_API_KEY="your-google-ai-studio-api-key"
 ```python
 import asyncio
 import os
+from dotenv import load_dotenv
 from edgevoiceai import (
     BaseTool,
     InMemoryMemoryStore,
@@ -135,6 +136,9 @@ from edgevoiceai import (
     VoiceAgent,
     VoiceConfig,
 )
+
+# Load GEMINI_API_KEY from .env
+load_dotenv()
 
 
 # Define a custom tool with prompt instructions
@@ -172,9 +176,9 @@ class BookAppointmentTool(BaseTool):
         time = params.get("time")
         # In a real app, write to database or calendar API
         return ToolResult(
-            success=True,
+            status="success",
+            message=f"Appointment booked for {name} on {date} at {time}.",
             data={"status": "confirmed", "booking_id": "APT-1001"},
-            user_message=f"Appointment booked for {name} on {date} at {time}.",
         )
 
 
@@ -186,7 +190,7 @@ async def main():
     # Configure the voice session
     config = VoiceConfig(
         api_key=api_key,
-        voice_name="Puck",  # Puck, Charon, Aoede, Fenrir, Kore
+        voice="Puck",  # Puck, Charon, Aoede, Fenrir, Kore
         system_instruction=(
             "You are a friendly, concise voice assistant. "
             "Keep responses natural, conversational, and direct."
@@ -198,15 +202,15 @@ async def main():
     registry.register(BookAppointmentTool())
     memory = InMemoryMemoryStore()
 
-    agent = VoiceAgent(config=config, tools=registry, memory_store=memory)
+    agent = VoiceAgent(config=config, tools=registry, memory=memory)
 
     print("🎙️ Starting Voice Assistant... Speak into your microphone!")
     try:
-        await agent.start()
+        await agent.run_edge()
     except KeyboardInterrupt:
         print("\nStopping...")
     finally:
-        await agent.stop()
+        agent.stop()
 
 
 if __name__ == "__main__":

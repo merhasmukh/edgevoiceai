@@ -194,3 +194,29 @@ def test_edgevoiceai_mount_docs():
     assert success is True
     site_path = get_site_directory()
     assert (site_path / "index.html").is_file()
+
+
+def test_configuration_dataclasses():
+    """Verifies AudioConfig, RAGConfig, WhatsAppConfig, and modular VoiceConfig synchronization."""
+    from edgevoiceai import AudioConfig, RAGConfig, WhatsAppConfig
+
+    audio = AudioConfig(input_device=2, output_device=3, interrupt_rms_threshold=3000)
+    assert audio.input_device == 2
+    assert audio.output_device == 3
+    assert audio.interrupt_rms_threshold == 3000
+
+    rag = RAGConfig(backend="pinecone", collection_name="test_kb", dimension=768)
+    assert rag.backend == "pinecone"
+    assert rag.dimension == 768
+
+    wa = WhatsAppConfig(provider="meta", phone_number_id="12345", token="token_xyz")
+    assert wa.provider == "meta"
+
+    # Initialize VoiceConfig with modular sub-configs
+    v_cfg = VoiceConfig(api_key="mock", audio=audio, rag=rag, whatsapp=wa)
+    assert v_cfg.audio.input_device == 2
+    assert v_cfg.input_device == 2  # sync check
+    assert v_cfg.rag is not None
+    assert v_cfg.rag.backend == "pinecone"
+    assert v_cfg.whatsapp is not None
+    assert v_cfg.whatsapp.phone_number_id == "12345"

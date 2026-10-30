@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "edgevoiceai"
-version = "0.1.1"
+version = "0.1.2"
 description = "A modular, full-duplex conversational Voice AI framework for edge devices (Raspberry Pi) and laptops (macOS, Linux, Windows)."
 readme = "README.md"
 requires-python = ">=3.10"

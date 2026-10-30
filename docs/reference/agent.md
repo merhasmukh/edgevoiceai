@@ -1,10 +1,10 @@
 # VoiceAgent & Configuration Reference
 
-This section documents the core runtime orchestration engine: [`VoiceAgent`](file:///Users/galaxyofai/Desktop/Github/khedut-voice-ai/edgevoiceai/agent.py) and the system-wide configuration dataclasses [`VoiceConfig`](file:///Users/galaxyofai/Desktop/Github/khedut-voice-ai/edgevoiceai/config.py) and [`AudioConfig`](file:///Users/galaxyofai/Desktop/Github/khedut-voice-ai/edgevoiceai/config.py).
+This section documents the core runtime orchestration engine `VoiceAgent` and the system configuration dataclasses (`VoiceConfig`, `AudioConfig`, `RAGConfig`, and `WhatsAppConfig`).
 
 ---
 
-## VoiceConfig & AudioConfig
+## Configuration Dataclasses
 
 ::: edgevoiceai.config
     options:
@@ -12,8 +12,8 @@ This section documents the core runtime orchestration engine: [`VoiceAgent`](fil
       members:
         - VoiceConfig
         - AudioConfig
-        - WhatsAppConfig
         - RAGConfig
+        - WhatsAppConfig
 
 ---
 

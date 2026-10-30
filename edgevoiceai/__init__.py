@@ -10,7 +10,7 @@ from edgevoiceai.audio.media import MediaAudioPlayer
 from edgevoiceai.audio.player import AudioPlayer
 from edgevoiceai.audio.stream import MicrophoneStream
 from edgevoiceai.audio.vad import VADConfig, VoiceActivityDetector, compute_rms
-from edgevoiceai.config import VoiceConfig
+from edgevoiceai.config import AudioConfig, RAGConfig, VoiceConfig
 from edgevoiceai.guardrails.farewell import FarewellDetector
 from edgevoiceai.guardrails.topic_guard import TopicGuard
 from edgevoiceai.memory.extractor import EntityExtractor
@@ -43,13 +43,15 @@ from edgevoiceai.tools.rag_tool import KnowledgeBaseTool
 from edgevoiceai.tools.registry import ToolRegistry
 from edgevoiceai.tools.sensor_tool import SensorTelemetryTool
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 __all__ = [
     # Core Agent & Config
     "VoiceAgent",
     "VoiceConfig",
+    "AudioConfig",
+    "RAGConfig",
     # Documentation & Mounting
     "mount_docs",
     "serve_docs",
