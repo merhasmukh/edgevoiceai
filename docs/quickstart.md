@@ -6,7 +6,7 @@ This guide walks you through building and running your first production-ready, f
 
 ## 1. Prerequisites
 
-- **Python**: `>= 3.10`
+- **Python**: `>= 3.10` (Python `3.10`, `3.11`, or `3.12` recommended on Windows)
 - **Google Gemini API Key**: [Get an API key from Google AI Studio](https://aistudio.google.com/)
 - **Microphone & Speaker**: Built-in laptop audio, USB headset, or separate USB sound cards on Raspberry Pi.
 
@@ -31,8 +31,22 @@ This guide walks you through building and running your first production-ready, f
 
 === "Windows"
     ```powershell
+    # On Python 3.10, 3.11, or 3.12 (pre-compiled binary wheel):
     pip install pyaudio
     ```
+
+    !!! tip "Windows Python Version Notice"
+        `PyAudio` provides official pre-compiled binary wheels for **Python 3.10, 3.11, and 3.12**.
+
+        If using **Python 3.14+**, pre-built wheels are not yet available on PyPI, and pip will try to compile from source. If you encounter `Microsoft Visual C++ 14.0 or greater is required`:
+        
+        - **Option A (Recommended)**: Create your virtual environment with Python 3.11 or 3.12:
+          ```powershell
+          py -3.11 -m venv venv
+          .\venv\Scripts\Activate.ps1
+          pip install edgevoiceai
+          ```
+        - **Option B**: Install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and select *"Desktop development with C++"*.
 
 ---
 

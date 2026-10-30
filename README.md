@@ -94,7 +94,10 @@ EdgeVoiceAI uses PortAudio for native, cross-platform audio streaming.
   sudo apt-get install -y portaudio19-dev libasound2-dev python3-pyaudio
   ```
 - **Windows**:
-  Pre-compiled wheels are included automatically via `pyaudio`.
+  - **Recommended Python**: **`3.10`, `3.11`, or `3.12`**. Official pre-compiled binary wheels for `pyaudio` are provided automatically—no compilers required.
+  - **Notice for Python 3.14+**: Python 3.14 does not have pre-built wheels on PyPI yet. If you see `Microsoft Visual C++ 14.0 or greater is required`, either:
+    1. *(Recommended)* Create your virtual environment with Python 3.11 or 3.12: `py -3.11 -m venv venv`
+    2. Or install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (select *"Desktop development with C++"*).
 
 ### 2. Install EdgeVoiceAI via pip
 

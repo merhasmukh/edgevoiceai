@@ -105,6 +105,18 @@ config = VoiceConfig(
     2. **Device Naming**: Windows devices often appear with driver suffixes like `"Microphone (Realtek High Definition Audio)"` or `"Headset Earphone (USB Audio Device)"`.
     3. **Substrings**: Pass `"Realtek"` or `"USB Audio"` directly to `input_device` and `output_device`.
 
+    ### Windows Python Versions & PyAudio
+    - **Recommended Python**: Use **Python 3.10, 3.11, or 3.12**. These versions have official pre-compiled wheels for PyAudio and require no external compilers.
+    - **Resolving `Microsoft Visual C++ 14.0 or greater is required`**:
+      This occurs on Windows if running Python 3.14+ (which currently lacks pre-built wheels on PyPI) or if pip attempts a source build. To resolve:
+      1. Create your environment with Python 3.11 or 3.12:
+         ```powershell
+         py -3.11 -m venv venv
+         .\venv\Scripts\Activate.ps1
+         pip install edgevoiceai
+         ```
+      2. Or install [Microsoft Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and select *"Desktop development with C++"*.
+
 ---
 
 ## 4. Latency & Buffer Calibration
